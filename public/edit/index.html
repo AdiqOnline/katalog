@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor Katalog — Jangan bagikan ke pelanggan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-deep:#0F3D3E;
+    --teal-mid:#154D4E;
+    --gold:#D4A94A;
+    --gold-soft:#EAD9AE;
+    --cream:#FBF8F3;
+    --ink:#1C1C1C;
+    --ink-soft:#5B5B57;
+    --line:#E7E1D3;
+    --danger:#B3452F;
+    --danger-soft:#F6E4DF;
+    --ok:#2E6B4F;
+    --ok-soft:#E1EFE6;
+    --radius:14px;
+    --shadow:0 8px 24px rgba(15,61,62,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#F2EFE7;color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  button,input,select,textarea{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+
+  /* ---------- GATE ---------- */
+  .gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .gate-card{
+    width:100%;
+    max-width:360px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:32px 28px;
+    box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .gate-icon{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--teal-deep);color:var(--gold-soft);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .gate-icon svg{width:22px;height:22px;}
+  .gate-card h1{font-family:'Fraunces',serif;font-size:20px;margin:0 0 6px;}
+  .gate-card p{font-size:13px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5;}
+  .gate-input{
+    width:100%;padding:12px 14px;border-radius:10px;
+    border:1px solid var(--line);font-size:14px;margin-bottom:10px;
+  }
+  .gate-btn{
+    width:100%;padding:12px;border-radius:10px;border:none;
+    background:var(--teal-deep);color:var(--cream);font-weight:600;font-size:14px;
+    cursor:pointer;transition:background .15s ease;
+  }
+  .gate-btn:hover{background:#0b2f30;}
+  .gate-error{color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;}
+  .gate-note{margin-top:18px;font-size:11px;color:#9b968a;line-height:1.5;}
+
+  /* ---------- APP SHELL ---------- */
+  .app{display:none;max-width:760px;margin:0 auto;padding:28px 20px 80px;}
+  .app.visible{display:block;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:24px;flex-wrap:wrap;gap:12px;
+  }
+  .topbar-left h1{font-family:'Fraunces',serif;font-size:22px;margin:0 0 2px;}
+  .topbar-left p{font-size:12.5px;color:var(--ink-soft);margin:0;}
+  .warn-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--gold-soft);color:#5c4a12;
+    font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:100px;
+  }
+  .warn-chip svg{width:12px;height:12px;}
+
+  .save-bar{
+    display:flex;align-items:center;gap:10px;
+  }
+  .btn{
+    padding:10px 18px;border-radius:10px;border:1px solid transparent;
+    font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s ease;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn svg{width:14px;height:14px;}
+  .btn-primary{background:var(--teal-deep);color:var(--cream);}
+  .btn-primary:hover{background:#0b2f30;}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--gold);}
+  .btn-danger{background:var(--danger-soft);color:var(--danger);}
+  .btn-danger:hover{background:#f0d5cc;}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+
+  .status-msg{
+    font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;
+    background:var(--ok-soft);color:var(--ok);
+    opacity:0;transition:opacity .3s ease;
+  }
+  .status-msg.show{opacity:1;}
+
+  .panel{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:13px;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--gold);margin:0 0 16px;font-weight:700;
+  }
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .field input,.field textarea,.field select{
+    padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+    font-size:13.5px;color:var(--ink);background:var(--cream);
+  }
+  .field textarea{resize:vertical;min-height:56px;}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+
+  .product-list{display:flex;flex-direction:column;gap:12px;}
+  .product-row{
+    border:1px solid var(--line);border-radius:12px;padding:14px;
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;background:var(--cream);
+  }
+  .product-row .field.full{grid-column:1/-1;}
+  .row-controls{
+    grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    padding-top:6px;border-top:1px dashed var(--line);margin-top:2px;
+  }
+  .toggle-group{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);}
+  .toggle-group label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+
+  .add-product-btn{
+    width:100%;padding:12px;border-radius:10px;border:1.5px dashed var(--line);
+    background:transparent;color:var(--ink-soft);font-weight:600;font-size:13px;
+    cursor:pointer;transition:all .15s ease;
+  }
+  .add-product-btn:hover{border-color:var(--gold);color:var(--ink);background:rgba(212,169,74,0.06);}
+
+  .link-hint{
+    font-size:12px;color:var(--ink-soft);background:rgba(15,61,62,0.05);
+    border:1px dashed var(--line);border-radius:10px;padding:12px 14px;
+    line-height:1.6;margin-top:6px;
+  }
+  .link-hint code{background:#fff;padding:1px 6px;border-radius:5px;border:1px solid var(--line);}
+
+  @media (max-width:560px){
+    .field-grid,.product-row{grid-template-columns:1fr;}
+    .topbar{flex-direction:column;align-items:flex-start;}
+    .save-bar{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<!-- GERBANG PASSWORD -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    </div>
+    <h1>Halaman Editor</h1>
+    <p>Halaman ini hanya untuk pemilik toko. Masukkan kata sandi untuk mengelola katalog.</p>
+    <input type="password" id="pwInput" class="gate-input" placeholder="Kata sandi editor" autocomplete="off">
+    <button class="gate-btn" id="pwSubmit">Masuk</button>
+    <div class="gate-error" id="pwError"></div>
+    <div class="gate-note">Kata sandi diatur lewat environment variable <strong>EDITOR_PASSWORD</strong> di pengaturan situs Netlify Anda.</div>
+  </div>
+</div>
+
+<!-- APLIKASI EDITOR -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Editor Katalog</h1>
+      <p>Perubahan di sini langsung tampil di halaman katalog pelanggan.</p>
+    </div>
+    <span class="warn-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 2 10 18H2Z"/><path d="M12 9v4M12 16h.01"/></svg>
+      Hanya untuk internal
+    </span>
+  </div>
+
+  <div class="save-bar" style="margin-bottom:20px;">
+    <button class="btn btn-primary" id="saveBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Simpan Perubahan
+    </button>
+    <button class="btn btn-ghost" id="resetBtn">Kembalikan ke Default</button>
+    <span class="status-msg" id="statusMsg">Tersimpan ✓</span>
+  </div>
+
+  <div class="panel">
+    <h2>Profil Toko</h2>
+    <div class="field-grid">
+      <div class="field"><label>Nama Toko</label><input id="f_name" type="text"></div>
+      <div class="field"><label>Inisial Avatar (2 huruf)</label><input id="f_initials" type="text" maxlength="3"></div>
+      <div class="field full"><label>Tagline</label><textarea id="f_tagline"></textarea></div>
+      <div class="field"><label>Lokasi</label><input id="f_location" type="text"></div>
+      <div class="field"><label>Jam Buka</label><input id="f_hours" type="text"></div>
+      <div class="field"><label>Nomor WhatsApp (format 62…)</label><input id="f_whatsapp" type="text" placeholder="6281234567890"></div>
+      <div class="field"><label>Username Instagram</label><input id="f_instagram" type="text" placeholder="namatoko"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Produk Katalog</h2>
+    <div class="product-list" id="productList"></div>
+    <button class="add-product-btn" id="addProductBtn" style="margin-top:12px;">+ Tambah Produk</button>
+  </div>
+
+  <div class="link-hint">
+    Bagikan tautan tanpa <code>/edit</code> ke pelanggan (misalnya <code>www.toko.com</code>). Simpan tautan dengan <code>/edit</code> hanya untuk Anda sendiri — jangan disebarluaskan, karena siapa pun yang membukanya bisa mengubah katalog.
+  </div>
+</div>
+
+<script>
+let sessionPassword = null; // disimpan sementara di memori setelah login, dipakai saat menyimpan
+
+const DEFAULT_PROFILE = {
+  name: "Kedai Rasa Nusantara",
+  initials: "KR",
+  tagline: "Camilan & bumbu rumahan asli buatan tangan, dikirim segar dari dapur kami ke rumah Anda.",
+  location: "Bandung, Jawa Barat",
+  hours: "Buka 08.00–20.00",
+  whatsapp: "6281234567890",
+  instagram: "kedairasanusantara"
+};
+
+const DEFAULT_PRODUCTS = [
+  {id:"p1", name:"Keripik Tempe Original", desc:"Renyah, tanpa pengawet · 250g", price:22000, category:"Camilan", stock:"tersedia", featured:true},
+  {id:"p2", name:"Sambal Bawang Rumahan", desc:"Pedas gurih · botol 150ml", price:28000, category:"Bumbu", stock:"tersedia", featured:false},
+  {id:"p3", name:"Jamu Kunyit Asam", desc:"Segar alami · botol 350ml", price:15000, category:"Minuman", stock:"tersedia", featured:false},
+  {id:"p4", name:"Bumbu Rendang Siap Pakai", desc:"Rempah asli Padang · 200g", price:35000, category:"Bumbu", stock:"habis", featured:false},
+  {id:"p5", name:"Paket Hampers Nusantara", desc:"Isi 5 camilan pilihan", price:95000, category:"Paket Hampers", stock:"tersedia", featured:false},
+  {id:"p6", name:"Es Cincau Gula Aren", desc:"Manis alami · cup 300ml", price:12000, category:"Minuman", stock:"tersedia", featured:false}
+];
+
+let profile = structuredClone(DEFAULT_PROFILE);
+let products = structuredClone(DEFAULT_PRODUCTS);
+
+// ---------- GATE ----------
+document.getElementById("pwSubmit").onclick = tryLogin;
+document.getElementById("pwInput").addEventListener("keydown", e => { if(e.key === "Enter") tryLogin(); });
+
+async function tryLogin(){
+  const val = document.getElementById("pwInput").value;
+  const btn = document.getElementById("pwSubmit");
+  btn.disabled = true;
+  btn.textContent = "Memeriksa…";
+  document.getElementById("pwError").textContent = "";
+  try{
+    const res = await fetch("/api/verify-password", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ password: val })
+    });
+    const data = await res.json();
+    if(data.ok){
+      sessionPassword = val;
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("app").classList.add("visible");
+      boot();
+    }else{
+      document.getElementById("pwError").textContent = "Kata sandi salah. Coba lagi.";
+    }
+  }catch(e){
+    document.getElementById("pwError").textContent = "Tidak bisa terhubung ke server. Coba lagi.";
+  }
+  btn.disabled = false;
+  btn.textContent = "Masuk";
+}
+
+// ---------- LOAD / SAVE ----------
+async function loadData(){
+  try{
+    const res = await fetch("/api/get-data");
+    if(res.ok){
+      const data = await res.json();
+      if(data.profile) profile = data.profile;
+      if(data.products) products = data.products;
+    }
+  }catch(e){ /* pakai default */ }
+}
+
+async function saveData(){
+  readProfileForm();
+  readProductsForm();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  try{
+    const res = await fetch("/api/save-data", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ password: sessionPassword, profile, products })
+    });
+    if(res.ok){
+      showStatus("Tersimpan ✓");
+    }else{
+      showStatus("Gagal menyimpan — sesi mungkin berakhir, muat ulang halaman");
+    }
+  }catch(e){
+    showStatus("Tidak bisa terhubung ke server");
+  }
+  btn.disabled = false;
+}
+
+function showStatus(msg){
+  const el = document.getElementById("statusMsg");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+// ---------- FORM: PROFIL ----------
+function renderProfileForm(){
+  document.getElementById("f_name").value = profile.name || "";
+  document.getElementById("f_initials").value = profile.initials || "";
+  document.getElementById("f_tagline").value = profile.tagline || "";
+  document.getElementById("f_location").value = profile.location || "";
+  document.getElementById("f_hours").value = profile.hours || "";
+  document.getElementById("f_whatsapp").value = profile.whatsapp || "";
+  document.getElementById("f_instagram").value = profile.instagram || "";
+}
+function readProfileForm(){
+  profile = {
+    name: document.getElementById("f_name").value.trim() || "Toko Saya",
+    initials: document.getElementById("f_initials").value.trim().toUpperCase() || "TS",
+    tagline: document.getElementById("f_tagline").value.trim(),
+    location: document.getElementById("f_location").value.trim(),
+    hours: document.getElementById("f_hours").value.trim(),
+    whatsapp: document.getElementById("f_whatsapp").value.trim(),
+    instagram: document.getElementById("f_instagram").value.trim()
+  };
+}
+
+// ---------- FORM: PRODUK ----------
+function renderProductsForm(){
+  const wrap = document.getElementById("productList");
+  wrap.innerHTML = "";
+  products.forEach((p, idx) => {
+    const row = document.createElement("div");
+    row.className = "product-row";
+    row.innerHTML = `
+      <div class="field"><label>Nama Produk</label><input type="text" data-f="name" value="${escapeHtml(p.name)}"></div>
+      <div class="field"><label>Kategori</label><input type="text" data-f="category" value="${escapeHtml(p.category)}"></div>
+      <div class="field full"><label>Deskripsi Singkat</label><input type="text" data-f="desc" value="${escapeHtml(p.desc || "")}"></div>
+      <div class="field"><label>Harga (Rp)</label><input type="number" data-f="price" value="${p.price}" min="0" step="500"></div>
+      <div class="field">
+        <label>Status Stok</label>
+        <select data-f="stock">
+          <option value="tersedia" ${p.stock === "tersedia" ? "selected" : ""}>Tersedia</option>
+          <option value="habis" ${p.stock === "habis" ? "selected" : ""}>Habis</option>
+        </select>
+      </div>
+      <div class="row-controls">
+        <label class="toggle-group">
+          <input type="checkbox" data-f="featured" ${p.featured ? "checked" : ""}> Tandai "Terlaris"
+        </label>
+        <button class="btn btn-danger btn-sm" data-remove="${idx}">Hapus Produk</button>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll("[data-remove]").forEach(btn => {
+    btn.onclick = () => {
+      const i = Number(btn.dataset.remove);
+      products.splice(i, 1);
+      renderProductsForm();
+    };
+  });
+}
+
+function readProductsForm(){
+  const rows = document.querySelectorAll(".product-row");
+  const updated = [];
+  rows.forEach((row, idx) => {
+    const get = f => row.querySelector(`[data-f="${f}"]`);
+    updated.push({
+      id: products[idx] && products[idx].id ? products[idx].id : "p" + Date.now() + idx,
+      name: get("name").value.trim() || "Produk Baru",
+      category: get("category").value.trim() || "Lainnya",
+      desc: get("desc").value.trim(),
+      price: Number(get("price").value) || 0,
+      stock: get("stock").value,
+      featured: get("featured").checked
+    });
+  });
+  products = updated;
+}
+
+document.getElementById("addProductBtn").onclick = () => {
+  products.push({id:"p" + Date.now(), name:"Produk Baru", desc:"", price:0, category:"Lainnya", stock:"tersedia", featured:false});
+  renderProductsForm();
+};
+
+document.getElementById("saveBtn").onclick = saveData;
+
+document.getElementById("resetBtn").onclick = () => {
+  if(confirm("Kembalikan semua data ke contoh default? Perubahan yang belum disimpan akan hilang.")){
+    profile = structuredClone(DEFAULT_PROFILE);
+    products = structuredClone(DEFAULT_PRODUCTS);
+    renderProfileForm();
+    renderProductsForm();
+  }
+};
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+async function boot(){
+  await loadData();
+  renderProfileForm();
+  renderProductsForm();
+}
+</script>
+</body>
+</html>

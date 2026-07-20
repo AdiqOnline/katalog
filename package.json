@@ -1,0 +1,8 @@
+{
+  "name": "katalog-toko",
+  "version": "1.0.0",
+  "description": "Katalog produk sederhana dengan halaman editor terpisah, disimpan via Netlify Blobs",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
